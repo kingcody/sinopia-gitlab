@@ -8,6 +8,7 @@ function GitlabClient(url, options) {
 }
 
 GitlabClient.prototype.auth = function(username, password, cb) {
+	if (!username) { return cb('Invalid username'); }
 	var isEmail = username.indexOf('@') !== -1;
 	var params = {
 		url: this.url + 'user',
@@ -21,6 +22,8 @@ GitlabClient.prototype.auth = function(username, password, cb) {
 	request(params, function(error, response, body) {
 		if(error) return cb(error);
 		if(response.statusCode < 200 || response.statusCode >= 300) return cb('Invalid status code ' + response.statusCode);
+		if (isEmail && username !== body.email) { return cb('Invalid credentials'); }
+		if (!isEmail && username !== body.username) { return cb('Invalid credentials'); }
 		cb(null, body);
 	});
 };
