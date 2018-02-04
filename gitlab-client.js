@@ -10,14 +10,13 @@ function GitlabClient(url, options) {
 GitlabClient.prototype.auth = function(username, password, cb) {
 	var isEmail = username.indexOf('@') !== -1;
 	var params = {
-		url: this.url + 'session',
-		method: 'POST',
-		json: {
-			login: isEmail ? undefined : username,
-			email: isEmail ? username : undefined,
-			password: password
+		url: this.url + 'user',
+		method: 'GET',
+		headers: {
+		  'Private-Token': password
 		},
-		ca: this.options.caFile
+		ca: this.options.caFile,
+		json: true
 	};
 	request(params, function(error, response, body) {
 		if(error) return cb(error);
@@ -151,3 +150,4 @@ GitlabClient.prototype.listGroupMembers = function(groupId, privateToken, cb) {
 };
 
 module.exports = GitlabClient;
+
