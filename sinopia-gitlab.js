@@ -299,7 +299,7 @@ SinopiaGitlab.prototype.authenticate = function(username, password, cb) {
 				cb(null, false, false);
 			} else {
 				cacheSet('user-' + username, user);
-				cacheSet('token-' + username, user.private_token);
+				cacheSet('token-' + username, password);
 				cb(null, {
 					password: password
 				});
@@ -423,3 +423,4 @@ SinopiaGitlab.prototype.allow_publish = function(user, _package, cb) {
 module.exports = function(settings, params) {
 	return new SinopiaGitlab(settings, params);
 };
+
