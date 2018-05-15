@@ -127,6 +127,31 @@ GitlabClient.prototype.listProjects = function(search, privateToken, cb) {
 	}, cb);
 };
 
+GitlabClient.prototype.listGroups = function(privateToken, cb) {
+	this.paginate({
+		url: this.url + 'groups',
+		qs: {
+			private_token: privateToken
+		},
+		ca: this.options.caFile
+	}, cb);
+};
+
+GitlabClient.prototype.listParentGroups = function(groupId, privateToken, cb) {
+	this.listGroups(privateToken, function(err, groups) {
+		if (err) { return cb(err); }
+		var groupsMap = {};
+		groups.forEach(function(group) { groupsMap[group.id] = group; });
+		var group = groupsMap[groupId];
+		groups = [group];
+		while (group.parent_id) {
+			group = groupsMap[group.parent_id];
+			groups.push(group);
+		}
+		cb(null, groups);
+	});
+};
+
 GitlabClient.prototype.getProjectTeamMember = function(projectId, userId, privateToken, cb) {
 	request({
 		url: this.url + 'projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId),
@@ -152,5 +177,18 @@ GitlabClient.prototype.listGroupMembers = function(groupId, privateToken, cb) {
 	}, cb);
 };
 
-module.exports = GitlabClient;
+GitlabClient.prototype.listRecursiveGroupMembers = function(groupId, privateToken, cb) {
+	var client = this;
+	this.listParentGroups(groupId, privateToken, function(err, groups) {
+		if (err) { return cb(err); }
 
+		async.parallel(
+			groups.map(function(group) {
+				return function(pcb) { client.listGroupMembers(group.id, privateToken, pcb); }
+			}),
+			cb
+		);
+	});
+};
+
+module.exports = GitlabClient;

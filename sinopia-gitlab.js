@@ -112,7 +112,7 @@ SinopiaGitlab.prototype._testConfig = function(packageName, cb) {
 	function notFount(callback) {
 		callback(new Error('Project not found: ' + packageName));
 	}
-	
+
 	function getGitlabProject(namespace, project, callback) {
 		return callback(null, namespace ? namespace + '/' + project : project);
 	}
@@ -199,7 +199,7 @@ SinopiaGitlab.prototype._parsePackageName = function (packageName) {
 			project = parse.slice(1).join('-');
 		}
 	}
-	
+
 	project = ((this.projectPrefix || '') + project);
 
 	return {error: null, namespace: namespace, project: project};
@@ -274,13 +274,16 @@ SinopiaGitlab.prototype._getGitlabGroupMember = function(groupId, userId, cb) {
 	checkCache('groupmember-' + groupId + '-' + userId, null, 600, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			if(error) return cb(error);
-			self.gitlab.listGroupMembers(groupId, token, function(error, members) {
+			self.gitlab.listRecursiveGroupMembers(groupId, token, function(error, members) {
 				if(error) return cb(error);
-				members = members.filter(function(member) {
-					return member.id === userId;
-				});
-				if(!members.length) return cb(null, null);
-				cb(null, members[0]);
+				var member = members.reduce(function(acc, cur) {
+					var curMember = cur.filter(function(m) { return m.id === userId; });
+					if (curMember.length && (!acc || curMember[0].access_level > acc.access_level )) {
+						return curMember[0];
+					}
+					return acc;
+				}, null);
+				cb(null, member);
 			});
 		});
 	}, cb);
@@ -423,4 +426,3 @@ SinopiaGitlab.prototype.allow_publish = function(user, _package, cb) {
 module.exports = function(settings, params) {
 	return new SinopiaGitlab(settings, params);
 };
-
