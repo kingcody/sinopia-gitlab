@@ -90,17 +90,6 @@ GitlabClient.prototype.listUsers = function(search, privateToken, cb) {
 	}, cb);
 };
 
-GitlabClient.prototype.listAllProjects = function(search, privateToken, cb) {
-	this.paginate({
-		url: this.url + 'projects/all',
-		qs: {
-			private_token: privateToken,
-			search: search
-		},
-		ca: this.options.caFile
-	}, cb);
-};
-
 GitlabClient.prototype.getProject = function(id, privateToken, cb) {
 	request({
 		url: this.url + 'projects/' + encodeURIComponent(id),
@@ -114,17 +103,6 @@ GitlabClient.prototype.getProject = function(id, privateToken, cb) {
 		if(response.statusCode < 200 || response.statusCode >= 300) return cb('Invalid status code ' + response.statusCode);
 		cb(null, JSON.parse(body));
 	});
-};
-
-GitlabClient.prototype.listProjects = function(search, privateToken, cb) {
-	this.paginate({
-		url: this.url + 'projects',
-		qs: {
-			private_token: privateToken,
-			search: search
-		},
-		ca: this.options.caFile
-	}, cb);
 };
 
 GitlabClient.prototype.listGroups = function(privateToken, cb) {
